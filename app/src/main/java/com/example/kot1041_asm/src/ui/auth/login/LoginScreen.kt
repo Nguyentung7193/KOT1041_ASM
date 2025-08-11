@@ -1,5 +1,7 @@
 package com.example.kot1041_asm.src.ui.auth.login
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -9,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -16,11 +19,33 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.kot1041_asm.R
+import com.example.kot1041_asm.src.DataStore.auth.TokenManager
+import com.example.kot1041_asm.src.viewmodle.auth.LoginState
+import com.example.kot1041_asm.src.viewmodle.auth.LoginViewModel
 
 @Composable
-fun LoginScreen(navController: NavController) {
+fun LoginScreen(navController: NavController,  viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    val loginState by viewModel.state.collectAsState()
+    val context = LocalContext.current
+    val tokenManager = remember { TokenManager(context) }
+
+    LaunchedEffect(loginState) {
+        when (loginState) {
+            is LoginState.Success -> {
+                val token = (loginState as LoginState.Success).data.token
+                if (!token.isNullOrEmpty()) {
+                    tokenManager.saveToken(token)
+                }
+                Toast.makeText(context, "Đăng nhập thành công", Toast.LENGTH_SHORT).show()
+                navController.navigate("home") {
+                    popUpTo("login") { inclusive = true }
+                }
+            }
+            else -> Unit
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -83,14 +108,27 @@ fun LoginScreen(navController: NavController) {
 
             Button(
                 onClick = {
-                    navController.navigate("home")
+                    viewModel.login(email, password)
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF9C27B0) // tím chính
                 ),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Đăng nhập", color = Color.White)
+                if (loginState is LoginState.Loading) {
+                    CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
+                } else {
+                    Text("Đăng nhập", color = Color.White)
+                }
+            }
+            if (loginState is LoginState.Error) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = (loginState as LoginState.Error).message,
+                    color = Color.Red,
+                    fontSize = 14.sp
+                )
+                Log.d("LoginScreen", "Error: ${(loginState as LoginState.Error).message}")
             }
 
             Spacer(modifier = Modifier.height(16.dp))

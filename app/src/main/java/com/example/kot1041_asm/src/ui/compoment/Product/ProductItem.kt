@@ -1,6 +1,6 @@
-package com.example.kot1041_asm.src.ui.compoment.Product
+package com.example.kot1041_asm.src.ui.compoment.product
 
-import androidx.compose.foundation.Image
+import Product
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -8,19 +8,29 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddShoppingCart
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.*
-import com.example.kot1041_asm.src.data.product.Product
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+
+// Model mới dùng API
+data class ProductUiModel(
+    val id: String,
+    val name: String,
+    val price: Double,
+    val imageUrl: String
+)
 
 @Composable
 fun ProductItem(
     product: Product,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier // 👉 THÊM dòng này
+    onAddToCart: (ProductUiModel) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
@@ -28,12 +38,11 @@ fun ProductItem(
             .clickable { onClick() }
             .padding(16.dp)
     ) {
-        Image(
-            painter = painterResource(id = product.imageRes),
+        AsyncImage(
+            model = product.image,
             contentDescription = product.name,
             modifier = Modifier
                 .height(200.dp)
-//                .fillMaxHeight()
                 .fillMaxWidth()
         )
 
@@ -58,7 +67,12 @@ fun ProductItem(
                 color = Color.White,
                 fontSize = 16.sp
             )
-            IconButton(onClick = { /* TODO: add to cart */ }) {
+            IconButton(onClick = { onAddToCart(ProductUiModel(
+                id = product._id,
+                name = product.name,
+                price = product.price,
+                imageUrl = product.image
+            )) }) {
                 Icon(
                     Icons.Default.AddShoppingCart,
                     contentDescription = "Add to cart",
@@ -68,3 +82,4 @@ fun ProductItem(
         }
     }
 }
+

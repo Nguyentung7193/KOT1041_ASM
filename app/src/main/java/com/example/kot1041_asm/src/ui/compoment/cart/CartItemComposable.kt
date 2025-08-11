@@ -1,18 +1,9 @@
-package com.example.kot1041_asm.src.ui.compoment.cart
-
+import android.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -22,11 +13,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.kot1041_asm.src.data.product.CartItem
+import coil.compose.AsyncImage
+import com.example.kot1041_asm.src.model.cart.CartItem
+import androidx.compose.ui.res.painterResource
+
 
 @Composable
 fun CartItemComposable(
@@ -42,13 +36,30 @@ fun CartItemComposable(
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Image(
-            painter = painterResource(id = cartItem.product.imageRes),
-            contentDescription = cartItem.product.name,
-            modifier = Modifier
-                .size(80.dp)
-                .clip(RoundedCornerShape(8.dp))
-        )
+        if (cartItem.product != null) {
+            // Nếu có ảnh URL bạn có thể thay thế "imageUrl" bằng trường ảnh thật
+            AsyncImage(
+                model = cartItem.product.image ?: "",
+                contentDescription = cartItem.product.name,
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop,
+                error = painterResource(id = R.drawable.ic_menu_report_image),
+                placeholder = painterResource(id = R.drawable.ic_menu_gallery)
+            )
+        } else {
+            // Placeholder nếu product null
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.Gray),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("No Image", color = Color.White, fontSize = 12.sp)
+            }
+        }
 
         Spacer(modifier = Modifier.width(12.dp))
 
@@ -56,14 +67,14 @@ fun CartItemComposable(
             modifier = Modifier.weight(1f)
         ) {
             Text(
-                text = cartItem.product.name,
+                text = cartItem.product?.name ?: "Sản phẩm không tồn tại",
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
                 color = Color(0xFFD1AFFF)
             )
 
             Text(
-                text = "${cartItem.product.price} đ",
+                text = "${cartItem.product?.price ?: 0} đ",
                 color = Color.White,
                 fontSize = 14.sp
             )

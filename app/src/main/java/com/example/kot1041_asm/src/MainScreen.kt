@@ -28,7 +28,6 @@ data class BottomNavItem(
 fun MainScreen(navController: NavHostController) {
     val bottomNavItems = listOf(
         BottomNavItem("Trang chủ", "home", Icons.Default.Home),
-        BottomNavItem("Sản phẩm", "product_list", Icons.Default.AdfScanner),
         BottomNavItem("Giỏ hàng", "cart", Icons.Default.ShoppingCart),
         BottomNavItem("Tài khoản", "profile", Icons.Default.Person)
     )

@@ -9,21 +9,38 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.example.kot1041_asm.src.data.product.FakeData.fakeOrderHistory
-import com.example.kot1041_asm.src.data.product.OrderHistory
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.kot1041_asm.src.model.order.OrderListModel
+import com.example.kot1041_asm.src.viewmodle.order.OrderViewModel
+import com.example.kot1041_asm.src.DataStore.auth.TokenManager
 
 @Composable
 fun OrderHistoryScreen(
     onBack: () -> Unit,
-    onOrderClick: (OrderHistory) -> Unit
+    onOrderClick: (OrderListModel) -> Unit
 ) {
     val backgroundColor = Color(0xFF121212)
     val textColor = Color.White
     val accentColor = Color(0xFFD1AFFF)
+
+    val context = LocalContext.current
+    val tokenManager = TokenManager(context)
+    val token = kotlinx.coroutines.runBlocking { tokenManager.getToken() ?: "" }
+    val orderViewModel: OrderViewModel = viewModel()
+    val orders by orderViewModel.orders.collectAsState()
+    val error by orderViewModel.error.collectAsState()
+
+    LaunchedEffect(Unit) {
+        orderViewModel.fetchOrders(token)
+    }
 
     Column(
         modifier = Modifier
@@ -52,10 +69,16 @@ fun OrderHistoryScreen(
             )
         }
 
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(fakeOrderHistory) { order ->
-                OrderCard(order, onClick = { onOrderClick(order) }, textColor, accentColor)
-                Spacer(modifier = Modifier.height(16.dp))
+        if (error != null) {
+            Text(text = error ?: "Lỗi không xác định", color = Color.Red)
+        } else if (orders.isEmpty()) {
+            Text(text = "Không có đơn hàng nào", color = Color.LightGray)
+        } else {
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                items(orders) { order ->
+                    OrderCard(order, onClick = { onOrderClick(order) }, textColor, accentColor)
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
             }
         }
     }
@@ -63,7 +86,7 @@ fun OrderHistoryScreen(
 
 @Composable
 fun OrderCard(
-    order: OrderHistory,
+    order: OrderListModel,
     onClick: () -> Unit,
     textColor: Color,
     accentColor: Color
@@ -79,13 +102,13 @@ fun OrderCard(
         elevation = CardDefaults.cardElevation(6.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("Ngày: ${order.date}", style = MaterialTheme.typography.titleSmall, color = textColor)
+            Text("Ngày: ${order.createdAt}", style = MaterialTheme.typography.titleSmall, color = textColor)
 
             Spacer(modifier = Modifier.height(8.dp))
 
             order.items.forEach {
                 Text(
-                    "- ${it.name} x${it.quantity} (${it.price.toInt()}đ)",
+                    "- ${it.product} x${it.quantity}",
                     color = textColor
                 )
             }
@@ -93,7 +116,7 @@ fun OrderCard(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                "Tổng: ${order.total.toInt()}đ",
+                "Tổng: ${order.totalPrice}đ",
                 style = MaterialTheme.typography.bodyLarge,
                 color = accentColor
             )
